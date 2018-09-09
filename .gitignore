@@ -1,0 +1,7 @@
+client/node_modules
+server/node_modules
+/build
+/*.log
+*.lock
+
+package-lock.json
