@@ -1,11 +1,12 @@
 module.exports = class Connection {
-  constructor({ socket, id, game }) {
+  constructor({ socket, id, game, endGame }) {
     // bind methids
     this.handleFlip = this.handleFlip.bind(this);
 
     this.socket = socket;
     this.id = id;
     this.game = game;
+    this.endGame = endGame;
 
     // add listener
     this.socket.on("flip", this.handleFlip);
@@ -16,5 +17,8 @@ module.exports = class Connection {
 
     this.socket.emit("flipped", this.game.getStats());
     this.socket.broadcast.emit("flipped", this.game.getStats());
+    if (this.game.score === 6) {
+      this.endGame();
+    }
   }
 };

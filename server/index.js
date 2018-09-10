@@ -44,28 +44,20 @@ function handleGameCreation(token) {
   games[token] = game;
 
   socketServer.on("connection", socket => {
-    return new Connection({ socket, id: token, game });
+    function endGame() {
+      socket.disconnect(true);
+      delete games[token];
+    }
+
+    return new Connection({ socket, id: token, game, endGame });
   });
 }
 
 // ---------------------
-// setup createGame route
+// setup routes
 // ----------------------
 server.route(createGameRoute({ handleGameCreation }));
 server.route(getGameData({ games }));
-
-// ---------
-// socket.io
-// ----------
-
-// io.on("connection", function(socket) {
-//   if (connections.length === MAX_CONNECTIONS) {
-//     socket.emit("error", "connections limit reached");
-//   } else {
-//     const connection = new Connection({ socket, index: connections.length });
-//     connections.push(connection);
-//   }
-// });
 
 // start the server
 server.start().then(() => {

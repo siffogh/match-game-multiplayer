@@ -5,7 +5,7 @@ module.exports = function({ games }) {
     const { token } = request.payload;
     const game = games[token];
     if (!game) {
-      throw Boom.badRequest("There is no available game for such url.");
+      throw Boom.badRequest("There is no available active game for such url.");
     }
 
     return { grid: game.grid, ...game.getStats() };

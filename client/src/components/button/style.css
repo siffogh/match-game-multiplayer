@@ -1,16 +1,12 @@
 .button {
   width: 200px;
   height: 50px;
-  background: #a43e17;
+  background: #e7a61a;
   border: 0;
   border-radius: 10px;
-  color: #fdbaac;
-  -webkit-box-shadow: 0px 3px 6px 0px #864601;
-  -moz-box-shadow: 0px 3px 6px 0px #864601;
-  box-shadow: 0px 3px 6px 0px #864601;
-  border: 1px solid #864601;
+  -webkit-box-shadow: 0px 3px 6px 0px #000;
+  -moz-box-shadow: 0px 3px 6px 0px #000;
+  box-shadow: 0px 3px 6px 0px #000;
   outline: none;
-  line-height: 2;
-  font-size: 2rem;
-  font-weight: bold;
+  font-size: 1.2rem;
 }

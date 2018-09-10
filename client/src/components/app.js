@@ -19,8 +19,8 @@ export default class App extends Component {
 	render() {
 		return (
 			<Router>
-				<Home path='/' />
-				<Game path='/game/:token' />
+				<Home path="/" />
+				<Game path="/game/:token" />
 			</Router>
 		);
 	}
