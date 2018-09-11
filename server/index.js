@@ -45,9 +45,11 @@ function handleGameCreation(token) {
 
   socketServer.on("connection", socket => {
     function endGame() {
-      socket.disconnect(true);
+      socket.disconnect();
       delete games[token];
     }
+
+    socket.on("disconnect", endGame);
 
     return new Connection({ socket, id: token, game, endGame });
   });

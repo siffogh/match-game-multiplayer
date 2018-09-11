@@ -1,6 +1,6 @@
 /* eslint react/sort-comp: 0 */
 
-import { Component, render } from 'preact';
+import { Component } from 'preact';
 import io from 'socket.io-client';
 
 
@@ -11,12 +11,24 @@ import style from './style';
 import { BASE_URL, post } from '../../request';
 import { route } from 'preact-router';
 
+// ---------
+// constants
+// ---------
 const LOAD_STATUS = {
 	LOADED: 0,
 	LOADING: 1,
 	ERROR: 2
 };
 
+const ERROR = {
+	DEFAULT: 'Sorry, the game was closed due to a connection problem with the server.',
+	TIMEOUT: 'Sorry, the game was closed due to inactivity.'
+};
+
+const DISCONNECT_REASON = {
+	TIMEOUT: 'ping timeout',
+	WIN: 'io server disconnect'
+};
 
 function getWords(data) {
 	const words = data.reduce((arr, row) => [...arr, ...row], []);
@@ -65,6 +77,15 @@ export default class Game extends Component {
 		this.socket = io(BASE_URL, { path: `/${this.props.token}` });
 		this.socket.on('flipped', newStats => {
 			this.setState(newStats);
+		});
+
+		this.socket.on('disconnect', reason => {
+			if (reason === DISCONNECT_REASON.WIN) {
+				return;
+			}
+
+			const message = reason === DISCONNECT_REASON.TIMEOUT ? ERROR.TIMEOUT : ERROR.DEFAULT;
+			this.setState({ load: { status: LOAD_STATUS.ERROR, message } });
 		});
 	}
 
