@@ -7,7 +7,6 @@ const Boom = require("boom");
 const createGameRoute = require("./routes/createGame");
 const getGameData = require("./routes/getGameData");
 const Game = require("./Game");
-const Connection = require("./Connection");
 
 const grid = [
   ["halo", "hello"],
@@ -25,6 +24,7 @@ const server = Hapi.server({
 
 // connections
 const MAX_GAMES = 1;
+const MAX_PLAYERS_PER_GAME = 1;
 const games = {};
 
 function isMaxGamesReached() {
@@ -36,22 +36,34 @@ function handleGameCreation(token) {
     throw Boom.badRequest("Games limit reached.");
   }
 
-  const socketServer = new SocketServer(server.listener, {
+  // create a new namespace for the token
+  const namespace = new SocketServer(server.listener, {
     path: `/${token}`
   });
 
-  const game = new Game({ grid });
+  const game = new Game({ grid, namespace });
   games[token] = game;
 
-  socketServer.on("connection", socket => {
-    function endGame() {
-      socket.disconnect();
-      delete games[token];
-    }
+  namespace.on("connection", socket => {
+    // check if game is full
+    namespace.clients((_, clients) => {
+      if (clients.length === MAX_PLAYERS_PER_GAME) {
+        games[token].isFull = true;
+      }
+    });
 
-    socket.on("disconnect", endGame);
+    // add flip event listener
+    socket.on("flip", game.flip);
 
-    return new Connection({ socket, id: token, game, endGame });
+    // add listener for disconnect
+    socket.on("disconnect", () => {
+      // remove game if no clients are left
+      namespace.clients((error, clients) => {
+        if (error || clients.length === 0) {
+          delete games[token];
+        }
+      });
+    });
   });
 }
 
