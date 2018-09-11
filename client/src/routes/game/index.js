@@ -1,44 +1,20 @@
 /* eslint react/sort-comp: 0 */
 
 import { Component } from 'preact';
+import { route } from 'preact-router';
 import io from 'socket.io-client';
 
 
 import Card from '../../components/card';
 import Feedback from '../../components/feedback';
-
-import style from './style';
 import { BASE_URL, post } from '../../request';
-import { route } from 'preact-router';
 
-// ---------
-// constants
-// ---------
-const LOAD_STATUS = {
-	LOADED: 0,
-	LOADING: 1,
-	ERROR: 2
-};
-
-const ERROR = {
-	DEFAULT: 'Sorry, the game was closed due to a connection problem with the server.',
-	TIMEOUT: 'Sorry, the game was closed due to inactivity.'
-};
-
-const DISCONNECT_REASON = {
-	TIMEOUT: 'ping timeout',
-	WIN: 'io server disconnect'
-};
-
-function getWords(data) {
-	const words = data.reduce((arr, row) => [...arr, ...row], []);
-	return words;
-}
+import { LOAD_STATUS, DISCONNECT_ERROR, DISCONNECT_REASON, getWords } from './service';
+import style from './style';
 
 export default class Game extends Component {
-
 	state = {
-		flippedCardIdx: null,
+		flippedIndices: [],
 		grid: [],
 		score: 0,
 		matches: {},
@@ -68,38 +44,48 @@ export default class Game extends Component {
 		}
 	}
 
+	initSocket = () => {
+		this.socket = io(BASE_URL, { path: `/${this.props.token}` });
+		this.socket.on('flipped', this.handleFlipped);
+		this.socket.on('matched', this.handleFlipped);
+		this.socket.on('mismatched', this.handleFlipped);
+		this.socket.on('disconnect', this.handleDisconnect);
+		this.socket.on('win', this.handleWin);
+	}
+
 	handleGameStart = token => {
 		route(`/game/${token}`);
 		this.loadGameData(token);
 	}
 
-	initSocket = () => {
-		this.socket = io(BASE_URL, { path: `/${this.props.token}` });
-		this.socket.on('flipped', newStats => {
-			this.setState(newStats);
-		});
+	handleDisconnect = reason => {
+		if (reason === DISCONNECT_REASON.WIN) {
+			return;
+		}
 
-		this.socket.on('disconnect', reason => {
-			if (reason === DISCONNECT_REASON.WIN) {
-				return;
-			}
+		const message = DISCONNECT_ERROR;
+		this.setState({ load: { status: LOAD_STATUS.ERROR, message } });
+	};
 
-			const message = reason === DISCONNECT_REASON.TIMEOUT ? ERROR.TIMEOUT : ERROR.DEFAULT;
-			this.setState({ load: { status: LOAD_STATUS.ERROR, message } });
-		});
+	handleFlipped = newStats => {
+		this.setState(newStats);
 	}
 
 	handleFlip = idx => {
-		this.setState({ flippedCardIdx: idx });
 		this.socket.emit('flip', idx);
 	}
 
-	render(_, { load, score, grid, flippedCardIdx, matches }) {
+	handleWin = () => {
+		this.socket.close();
+		this.setState({ load: { status: LOAD_STATUS.WIN } });
+	}
+
+	render(_, { load, grid, flippedIndices, matches }) {
 		if (load.status === LOAD_STATUS.LOADING) {
 			return <div class={style.game}><div>Loading...</div></div>;
 		}
 
-		if (load.status === LOAD_STATUS.ERROR) {
+		if (load.status === LOAD_STATUS.ERROR ) {
 			return (
 				<Feedback onGameStart={this.handleGameStart}>
 					<div class="emoji">😕</div>
@@ -108,7 +94,7 @@ export default class Game extends Component {
 			);
 		}
 
-		if (score === 6) {
+		if (load.status === LOAD_STATUS.WIN) {
 			return (
 				<Feedback onGameStart={this.handleGameStart}>
 					<div class="emoji">🎉</div>
@@ -125,7 +111,12 @@ export default class Game extends Component {
 					<div class={style.grid}>
 						{
 							getWords(grid).map((word, idx) => (
-								<Card front={'?'} back={word} isFlipped={idx === flippedCardIdx} isDisabled={matches[idx] || false} onClick={() => this.handleFlip(idx)} />
+								<Card front={'?'}
+									back={word}
+									isFlipped={flippedIndices.includes(idx)}
+									isDisabled={Boolean(matches[idx])}
+									onClick={() => this.handleFlip(idx)}
+								/>
 							))
 						}
 					</div>
