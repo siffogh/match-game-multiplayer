@@ -18,14 +18,23 @@
     "build/*"
   ],
   "devDependencies": {
-    "eslint": "^4.9.0",
+    "babel-eslint": "^7.2.3",
+    "eslint": "^4.1.1",
+    "eslint-config-prettier": "^3.0.1",
+    "eslint-config-react-app": "^2.1.0",
     "eslint-config-synacor": "^2.0.2",
+    "eslint-plugin-flowtype": "^2.34.1",
+    "eslint-plugin-import": "^2.6.0",
+    "eslint-plugin-jsx-a11y": "^5.1.1",
+    "eslint-plugin-prettier": "^2.6.2",
+    "eslint-plugin-react": "^7.1.0",
     "identity-obj-proxy": "^3.0.0",
     "if-env": "^1.0.0",
     "jest": "^21.2.1",
     "preact-cli": "^2.1.0",
     "preact-cli-plugin-async": "^2.0.0",
-    "preact-render-spy": "^1.2.1"
+    "preact-render-spy": "^1.2.1",
+    "prettier": "^1.14.2"
   },
   "dependencies": {
     "preact": "^8.2.6",
