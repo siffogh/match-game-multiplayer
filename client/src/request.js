@@ -1,4 +1,4 @@
-export const BASE_URL = 'http://localhost:3000';
+export const BASE_URL = 'https://server-zwlegbkffp.now.sh';
 
 export async function request({ url, method, body, query, headers }) {
 	const resourceUrl = query ? `${BASE_URL}/${url}?${stringifyQuery(query)}` : `${BASE_URL}/${url}`;

@@ -3,7 +3,7 @@
 import { Component } from 'preact';
 import { route } from 'preact-router';
 import io from 'socket.io-client';
-
+import { fromEvent, merge } from 'rxjs';
 
 import Card from '../../components/card';
 import Feedback from '../../components/feedback';
@@ -46,11 +46,12 @@ export default class Game extends Component {
 
 	initSocket = () => {
 		this.socket = io(BASE_URL, { path: `/${this.props.token}` });
-		this.socket.on('flipped', this.handleFlipped);
-		this.socket.on('matched', this.handleFlipped);
-		this.socket.on('mismatched', this.handleFlipped);
-		this.socket.on('disconnect', this.handleDisconnect);
-		this.socket.on('win', this.handleWin);
+		const flippedObservable = fromEvent(this.socket, 'flipped');
+		const matchedObservable = fromEvent(this.socket, 'matched');
+		const mismatchedObservable = fromEvent(this.socket, 'mismatched');
+		merge(flippedObservable, matchedObservable, mismatchedObservable).subscribe(this.handleFlipped);
+		fromEvent(this.socket, 'disconnect').subscribe(this.handleDisconnect);
+		fromEvent(this.socket, 'win').subscribe(this.handleWin);
 	}
 
 	handleGameStart = token => {
@@ -82,7 +83,7 @@ export default class Game extends Component {
 
 	render(_, { load, grid, flippedIndices, matches }) {
 		if (load.status === LOAD_STATUS.LOADING) {
-			return <div class={style.game}><div>Loading...</div></div>;
+			return <div class={style.loading}>Loading...</div>;
 		}
 
 		if (load.status === LOAD_STATUS.ERROR ) {

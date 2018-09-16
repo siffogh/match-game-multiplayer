@@ -16,7 +16,7 @@ export default class Feedback extends Component {
 		};
 
 		startGame = async () => {
-			this.setState({ isLoaded: false }, async() => {
+			this.setState({ load: { status: LOAD_STATUS.LOADING, message: null } }, async() => {
 				try {
 					const res = await get('create-game');
 					const { token } = await res.json();

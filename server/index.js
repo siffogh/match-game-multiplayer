@@ -24,7 +24,7 @@ const server = Hapi.server({
 
 // connections
 const MAX_GAMES = 1;
-const MAX_PLAYERS_PER_GAME = 1;
+const MAX_PLAYERS_PER_GAME = 2;
 const games = {};
 
 function isMaxGamesReached() {
@@ -47,9 +47,7 @@ function handleGameCreation(token) {
   namespace.on("connection", socket => {
     // check if game is full
     namespace.clients((_, clients) => {
-      if (clients.length === MAX_PLAYERS_PER_GAME) {
-        games[token].isFull = true;
-      }
+      games[token].isFull = clients.length === MAX_PLAYERS_PER_GAME;
     });
 
     // add flip event listener
@@ -58,6 +56,7 @@ function handleGameCreation(token) {
     // add listener for disconnect
     socket.on("disconnect", () => {
       // remove game if no clients are left
+      games[token].isFull = false;
       namespace.clients((error, clients) => {
         if (error || clients.length === 0) {
           delete games[token];
