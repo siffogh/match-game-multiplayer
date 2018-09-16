@@ -1,6 +1,3 @@
-// ---------
-// constants
-// ---------
 export const LOAD_STATUS = {
 	LOADED: 0,
 	LOADING: 1,
@@ -14,8 +11,3 @@ export const DISCONNECT_REASON = {
 	TIMEOUT: 'ping timeout',
 	WIN: 'io server disconnect'
 };
-
-export function getWords(data) {
-	const words = data.reduce((arr, row) => [...arr, ...row], []);
-	return words;
-}

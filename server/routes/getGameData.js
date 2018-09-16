@@ -14,7 +14,7 @@ module.exports = function({ games }) {
       );
     }
 
-    return { grid: game.grid, ...game.getStats() };
+    return { words: game.words, ...game.getStats() };
   }
 
   return {

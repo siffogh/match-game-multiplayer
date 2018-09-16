@@ -13,14 +13,13 @@ import {
   LOAD_STATUS,
   DISCONNECT_ERROR,
   DISCONNECT_REASON,
-  getWords
-} from "./service";
+} from "./constants";
 import style from "./style";
 
 export default class Game extends Component {
   state = {
     flippedIndices: [],
-    grid: [],
+    words: [],
     score: 0,
     matches: {},
     load: {
@@ -103,8 +102,8 @@ export default class Game extends Component {
     this.setState(newStats);
   };
 
-  handleFlip = idx => {
-    this.socket.emit("flip", idx);
+  handleFlip = word => {
+    this.socket.emit("flip", word);
   };
 
   handleWin = () => {
@@ -116,7 +115,7 @@ export default class Game extends Component {
     });
   };
 
-  render(_, { load, grid, flippedIndices, matches }) {
+  render(_, { load, words, flippedIndices, matches }) {
     if (load.status === LOAD_STATUS.LOADING) {
       return <div class={style.loading}>Loading... </div>;
     }
@@ -143,15 +142,14 @@ export default class Game extends Component {
       <div class={style.game}>
         <div class={style.header}>Score: {this.state.score} </div>
         <main class={style.body}>
-          >
           <div class={style.grid}>
-            {getWords(grid).map((word, idx) => (
+            {words.map(word => (
               <Card
                 front={"?"}
-                back={word}
-                isFlipped={flippedIndices.includes(idx)}
-                isDisabled={Boolean(matches[idx])}
-                onClick={() => this.handleFlip(idx)}
+                back={word.value}
+                isFlipped={flippedIndices.includes(word.key)}
+                isDisabled={Boolean(matches[word.key])}
+                onClick={() => this.handleFlip(word)}
               />
             ))}
           </div>

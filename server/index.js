@@ -8,14 +8,73 @@ const createGameRoute = require("./routes/createGame");
 const getGameData = require("./routes/getGameData");
 const Game = require("./Game");
 
-const grid = [
-  ["halo", "hello"],
-  ["mous", "mause"],
-  ["stuhl", "chair"],
-  ["wasser", "water"],
-  ["hell", "bright"],
-  ["kurs", "course"]
+function shuffleArray(array) {
+  return [...array].sort(function(){return Math.random() - Math.random()});
+}
+
+const words = [
+  {
+    value: 'jung',
+    key: 0,
+    match: 1
+  },
+  {
+    value: 'young',
+    key: 1,
+    match: 0
+  },
+  {
+    value: 'möglich',
+    key: 2,
+    match: 3
+  },
+  {
+    value: 'possible',
+    key: 3,
+    match: 2
+  },
+  {
+    value: 'nichts',
+    key: 4,
+    match: 5
+  },
+  {
+    value: 'nothing',
+    key: 5,
+    match: 4
+  },
+  {
+    value: 'stuhl',
+    key: 6,
+    match: 7
+  },
+  {
+    value: 'chair',
+    key: 7,
+    match: 6
+  },
+  {
+    value: 'hell',
+    key: 8,
+    match: 9
+  },
+  {
+    value: 'bright',
+    key: 9,
+    match: 8
+  },
+  {
+    value: 'kurs',
+    key: 10,
+    match: 11
+  },
+  {
+    value: 'course',
+    key: 11,
+    match: 10
+  }
 ];
+
 
 const server = Hapi.server({
   host: "localhost",
@@ -41,7 +100,7 @@ function handleGameCreation(token) {
     path: `/${token}`
   });
 
-  const game = new Game({ grid, namespace });
+  const game = new Game({ words: shuffleArray(words), namespace });
   games[token] = game;
 
   namespace.on("connection", socket => {
