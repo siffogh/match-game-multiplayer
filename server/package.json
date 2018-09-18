@@ -10,7 +10,10 @@
   "license": "ISC",
   "dependencies": {
     "hapi": "^17.5.4",
-    "socket.io": "^2.1.1"
+    "hapi-swagger": "^9.1.1",
+    "inert": "^5.1.0",
+    "socket.io": "^2.1.1",
+    "vision": "^5.4.0"
   },
   "devDependencies": {
     "eslint": "^5.5.0",

@@ -1,0 +1,15 @@
+{	
+  "extends": [	
+    "eslint:recommended",	
+    "plugin:prettier/recommended"	
+  ],	
+  "rules": {	
+    "no-console": 1	
+  },	
+  "parserOptions": {	
+    "ecmaVersion": 9	
+  },	
+  "env": {	
+      "node": ">= 8.10"	
+  }	
+} 

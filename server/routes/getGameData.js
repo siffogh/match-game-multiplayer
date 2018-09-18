@@ -1,20 +1,35 @@
 const Boom = require("boom");
 
 module.exports = function({ games }) {
-  function handler(request) {
+  function handler(request, h) {
     const { token } = request.payload;
     const game = games[token];
+
     if (!game) {
       throw Boom.badRequest("There is no available active game for such url.");
     }
 
-    if (game.isFull) {
-      throw Boom.badRequest(
-        "Sorry, the maximum number of players in this game has been reached."
-      );
+    // handle userCookie
+    let userCookie = request.state.user;
+    if (!userCookie || (userCookie && userCookie.token !== token)) {
+      try {
+        userCookie = {
+          username: game.generateUsername(),
+          token: token
+        };
+      } catch (e) {
+        throw Boom.badRequest(e.message);
+      }
     }
 
-    return { words: game.words, ...game.getStats() };
+    // return response
+    return h
+      .response({
+        words: game.words,
+        ...game.getStats(),
+        username: userCookie.username
+      })
+      .state("user", userCookie);
   }
 
   return {
@@ -22,6 +37,7 @@ module.exports = function({ games }) {
     path: "/game-data",
     handler,
     config: {
+      tags: ["api"],
       cors: {
         origin: ["*"],
         credentials: true

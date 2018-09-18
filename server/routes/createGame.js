@@ -19,9 +19,7 @@ module.exports = function({ handleGameCreation }) {
       throw e;
     }
 
-    return {
-      token
-    };
+    return { token };
   }
 
   return {
@@ -29,6 +27,7 @@ module.exports = function({ handleGameCreation }) {
     path: "/create-game",
     handler,
     config: {
+      tags: ["api"],
       cors: {
         origin: ["*"],
         credentials: true
