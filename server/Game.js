@@ -125,11 +125,6 @@ module.exports = class Game {
           ? usernames[1]
           : usernames[0];
     }
-
-    // in 1000 seconds, update players whether they can play or not
-    setTimeout(() => {
-      this.namespace.emit(EVENT.PLAYERS_UPDATED, this.getPlayers());
-    }, 1000);
   }
 
   removeCurrentPlayer() {
@@ -161,13 +156,10 @@ module.exports = class Game {
     this.namespace.emit(EVENT.PLAYERS_UPDATED, this.getPlayers());
   }
 
-  resetFlippedIndices(cb = () => {}) {
+  resetFlippedIndices() {
     this.flippedIndices = [];
     setTimeout(() => {
-      Object.entries(this.players).forEach(([username, { socket }]) => {
-        socket.emit(EVENT.CARD_FLIPPED, this.getGameStats());
-      });
-      cb();
+      this.namespace.emit(EVENT.CARD_FLIPPED, this.getGameStats());
     }, 500);
   }
 
@@ -209,7 +201,7 @@ module.exports = class Game {
       idx => (this.matches[idx] = { color: this.players[username].color })
     );
 
-    // incement the score of the player
+    // increment the score of the player
     this.players[username].score++;
 
     // check whether the current player won
@@ -221,7 +213,8 @@ module.exports = class Game {
   }
 
   handleMismatch() {
-    this.resetFlippedIndices(() => this.switchCurrentPlayer());
+    this.resetFlippedIndices();
+    this.switchCurrentPlayer();
   }
 
   flip({ username, word }) {
