@@ -1,12 +1,20 @@
 import style from "./style.css";
 
-export default function Card({ front, back, isFlipped, match, onClick }) {
+export default function Card({
+  front,
+  back,
+  isFlipped,
+  match,
+  onClick,
+  disabled
+}) {
   if (Boolean(match)) {
     return (
       <div class={style.card} data-isFlipped={true}>
-        <div
+        <button
           class={style.match}
-          style={{ background: match.username.toLowerCase() }}
+          style={{ background: match.color }}
+          disabled
         />
       </div>
     );
@@ -14,9 +22,9 @@ export default function Card({ front, back, isFlipped, match, onClick }) {
 
   return (
     <div class={style.card} data-isFlipped={isFlipped}>
-      <div class={style.front} onClick={onClick}>
+      <button class={style.front} onClick={onClick} disabled={disabled}>
         {front}
-      </div>
+      </button>
       <div class={style.back}>{back}</div>
     </div>
   );

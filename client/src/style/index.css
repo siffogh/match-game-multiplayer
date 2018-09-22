@@ -13,9 +13,12 @@ html, body {
 	-moz-osx-font-smoothing: grayscale;
 }
 
+
 button, input {
 	font-family: 'Press Start 2P', cursive;
 	color: #000;
+	cursor: pointer;
+	-webkit-tap-highlight-color: rgba(0,0,0,0);
 }
 
 * {

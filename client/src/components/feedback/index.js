@@ -1,4 +1,5 @@
 import { Component } from "preact";
+import { route } from "preact-router";
 
 import Button from "../../components/button";
 import { get } from "../../request";
@@ -22,7 +23,8 @@ export default class Feedback extends Component {
         try {
           const res = await get("create-game");
           const { token } = await res.json();
-          this.props.onGameStart(token);
+          console.log({ token });
+          return route(`/game/${token}`);
         } catch (e) {
           const error = await e.json();
           this.setState({

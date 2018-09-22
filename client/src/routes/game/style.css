@@ -27,7 +27,20 @@
 }
 
 .header {
-	font-size: 1.5rem;
+	display: flex;
+	justify-content: space-between;
+	width: 100%;
+	max-width: 290px;
+}
+
+.currentPlayer {
+	border-width: 1px;
+	border-style: solid;
+	border-radius: 6px;
+}
+
+.currentPlayer, .otherPlayer {
+	padding: 10px;
 }
 
 

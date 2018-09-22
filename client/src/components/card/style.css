@@ -23,7 +23,10 @@
   -moz-box-shadow: 0px 6px 5px 0px #864601;
   box-shadow: 0px 6px 5px 0px #864601;
   border: 1px solid #864601;
-  cursor: pointer;
+  -webkit-user-select: none; /* Safari */        
+  -moz-user-select: none; /* Firefox */
+  -ms-user-select: none; /* IE10+/Edge */
+  user-select: none; /* Standard */
 }
 
 .card .front {
@@ -33,6 +36,10 @@
   transform: rotateY(0deg);
   font-size: 2rem;
   color: #864601;
+}
+
+.card .front:disabled {
+  opacity: 0.6;
 }
 
 .card .back {

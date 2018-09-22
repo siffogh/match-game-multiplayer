@@ -3,9 +3,9 @@
 import { Component } from "preact";
 import { route } from "preact-router";
 import io from "socket.io-client";
-import { fromEvent } from "rxjs";
+import { fromEvent, Observable } from "rxjs";
+import { throttleTime } from "rxjs/operators";
 import Card from "../../components/card";
-import Feedback from "../../components/feedback";
 import { BASE_URL, post } from "../../request";
 
 import style from "./style";
@@ -21,20 +21,23 @@ export default class Game extends Component {
   state = {
     flippedIndices: [],
     words: [],
-    score: 0,
     matches: {},
     load: {
       status: LOAD_STATUS.LOADING,
       message: null
     },
     countdown: 20,
-    username: "",
-    canPlay: false
+    players: [],
+    username: null
   };
 
   constructor(props) {
     super(props);
     this.socket = null;
+    this.flipObservable = Observable.create(observer => {
+      this.flipNext = word => observer.next(word);
+    });
+    this.flipObservable.pipe(throttleTime(500)).subscribe(this.flipCard);
   }
 
   async componentDidMount() {
@@ -78,12 +81,12 @@ export default class Game extends Component {
       this.handlePlayerCountdownUpdate
     );
 
-    fromEvent(this.socket, EVENT.PLAYER_COUNTDOWN_EXPIRED).subscribe(
-      this.handlePlayerCountdownExpiry
+    fromEvent(this.socket, EVENT.PLAYERS_UPDATED).subscribe(
+      this.handlePlayersUpdate
     );
 
-    fromEvent(this.socket, EVENT.CURRENT_PLAYER_SWITCHED).subscribe(
-      this.handleCurrentPlayerSwitch
+    fromEvent(this.socket, EVENT.PLAYER_COUNTDOWN_EXPIRED).subscribe(
+      this.handlePlayerCountdownExpiry
     );
 
     fromEvent(this.socket, EVENT.GAME_END).subscribe(this.handleGameEnd);
@@ -99,22 +102,18 @@ export default class Game extends Component {
     this.setState({ countdown });
   };
 
-  handlePlayerCountdownExpiry = () => {
-    this.socket.close();
-    this.setState({
-      load: {
-        status: LOAD_STATUS.TIMEOUT
-      }
-    });
+  handlePlayersUpdate = players => {
+    this.setState({ players });
   };
 
-  handleCurrentPlayerSwitch = canPlay => {
-    this.setState({ canPlay });
+  handlePlayerCountdownExpiry = () => {
+    this.socket.close();
+    this.props.removeGame(GAME_END_TYPE.PLAYER_TIMEOUT);
   };
 
   handleGameEnd = message => {
-    this.setState({ load: { status: LOAD_STATUS.GAME_END, message } });
     this.socket.close();
+    this.props.removeGame(message);
   };
 
   handleGameStart = token => {
@@ -131,92 +130,59 @@ export default class Game extends Component {
     });
   };
 
-  handleFlip = word => {
+  flipCard = word => {
     this.socket.emit(EVENT.CARD_FLIP, word);
   };
 
-  render(
-    _,
-    {
-      username,
-      score,
-      load,
-      words,
-      flippedIndices,
-      matches,
-      countdown,
-      canPlay
-    }
-  ) {
+  leaveGame = () => {
+    this.socket.close();
+    this.route("/");
+  };
+
+  canIPlay = () => {
+    const { canPlay } =
+      this.state.players.find(
+        player => player.username === this.state.username
+      ) || {};
+
+    return canPlay;
+  };
+
+  render(_, { load, words, flippedIndices, matches, countdown, players }) {
     if (load.status === LOAD_STATUS.LOADING) {
       return <div class={style.loading}>Loading... </div>;
     }
 
-    if (load.status === LOAD_STATUS.ERROR) {
-      return (
-        <Feedback onGameStart={this.handleGameStart}>
-          <div class="emoji">😕 </div>
-          <div class={style.message}>{load.message} </div>
-        </Feedback>
-      );
-    }
-
-    if ([LOAD_STATUS.GAME_END, LOAD_STATUS.TIMEOUT].includes(load.status)) {
-      let emoji, message;
-      if (load.status === LOAD_STATUS.TIMEOUT) {
-        emoji = "😕";
-        message = `You have been removed from the game. You can restart to join again
-        or create a new game.`;
-      } else {
-        switch (load.message) {
-          case GAME_END_TYPE.WON:
-            emoji = "🎉";
-            message = "Congratulations!";
-            break;
-          case GAME_END_TYPE.LOST:
-            emoji = "😕";
-            message = "You lost!";
-            break;
-          case GAME_END_TYPE.TIE:
-            emoji = "👍🏻";
-            message = "Well Played! It's a tie.";
-            break;
-          default:
-            emoji = "😕";
-            message = "This game has been closed due to inactivity.";
-        }
-      }
-
-      return (
-        <Feedback onGameStart={this.handleGameStart}>
-          <div class="emoji">{emoji}</div>
-          <div> {message}</div>
-        </Feedback>
-      );
-    }
+    console.log(players);
 
     return (
       <div class={style.game}>
         <div class={style.header}>
-          <div class={style.score} style={{ color: username.toLowerCase() }}>
-            Score: {score}
-          </div>
+          {players.map(({ username, score, canPlay, color }) => (
+            <div
+              class={canPlay ? style.currentPlayer : style.otherPlayer}
+              style={{ borderColor: color, color }}
+            >
+              {username}: {score}
+            </div>
+          ))}
         </div>
         <main class={style.body}>
           <div class={style.canPlay}>
-            {!canPlay ? "Wait for your turn" : "Your turn"}
+            {!this.canIPlay() ? "Wait for your turn" : "Your turn"}
           </div>
           {countdown > 10 ? null : (
             <div class={style.countdown}>{countdown}</div>
           )}
-          <div class={style.grid} data-canPlay={canPlay}>
+          <div class={style.grid} data-canPlay={this.canIPlay()}>
             {words.map(word => (
               <Card
                 front={"?"}
                 back={word.value}
                 isFlipped={flippedIndices.includes(word.key)}
                 match={matches[word.key]}
-                onClick={!canPlay ? () => {} : () => this.handleFlip(word)}
+                disabled={!this.canIPlay()}
+                onClick={() => this.flipNext(word)}
               />
             ))}
           </div>

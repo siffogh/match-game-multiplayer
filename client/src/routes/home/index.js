@@ -1,16 +1,15 @@
-import Feedback from '../../components/feedback';
+import Feedback from "../../components/feedback";
 
-import { route } from 'preact-router';
-
-
-function handleGameStart(token) {
-	return route(`game/${token}`);
-}
-
-export default function Home() {
-	return (
-		<Feedback onGameStart={handleGameStart}>
-			<h1>Home</h1>
-		</Feedback>
-	);
+export default function Home({ feedback }) {
+  return feedback ? (
+    <Feedback path="/">
+      <div class="emoji">{feedback.emoji} </div>
+      <div> {feedback.message} </div>
+    </Feedback>
+  ) : (
+    <Feedback>
+      <h2>Match Game</h2>
+      <img src="/assets/logo.png" alt="match game logo" height="50" />
+    </Feedback>
+  );
 }
