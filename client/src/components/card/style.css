@@ -1,4 +1,4 @@
-.card[data-isFlipped="true"], .card[data-isDisabled="true"] {
+.card[data-isFlipped="true"] {
   transform: rotateY(180deg);
 }
 
@@ -8,7 +8,7 @@
   transform-style: preserve-3d;
 }
 
-.card .front,  .card .back{
+.card .front,  .card .back, .card .match{
   display: flex;
   align-items: center;
   justify-content: center;
@@ -23,6 +23,7 @@
   -moz-box-shadow: 0px 6px 5px 0px #864601;
   box-shadow: 0px 6px 5px 0px #864601;
   border: 1px solid #864601;
+  cursor: pointer;
 }
 
 .card .front {
@@ -38,8 +39,6 @@
   background: white;
   transform: rotateY(180deg);
 }
-
-.card[data-isDisabled="true"] .back {
-  background:  #43B047;
-  color:  #43B047;
+.card .match {
+  transform: rotateY(180deg);
 }

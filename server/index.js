@@ -7,6 +7,7 @@ const HapiSwagger = require("hapi-swagger");
 const Inert = require("inert");
 const Vision = require("vision");
 
+const { EVENT } = require("../__internal/constants");
 const words = require("./words");
 const createGameRoute = require("./routes/createGame");
 const getGameData = require("./routes/getGameData");
@@ -54,21 +55,25 @@ function handleGameCreation(token) {
   const game = new Game({
     words: shuffleArray(words),
     namespace,
-    handleGameEnd
+    onGameEnd: handleGameEnd
   });
+
   games[token] = game;
 
-  namespace.on("connection", socket => {
+  namespace.on(EVENT.CONNECTION, socket => {
+    // register player
+    const username = socket.handshake.query.username;
+    game.registerPlayer({ socket, username });
+
     // add flip event listener
-    socket.on("flip", word => game.flip({ word, socket }));
-    // socket.on("remove_player", username => game.removePlayer(username));
+    socket.on(EVENT.CARD_FLIP, word => game.flip({ word, username }));
   });
 }
 
 // ---------------------
 // setup routes
 // ----------------------
-server.route(createGameRoute({ handleGameCreation }));
+server.route(createGameRoute({ onGameCreated: handleGameCreation }));
 server.route(getGameData({ games }));
 
 // swagger

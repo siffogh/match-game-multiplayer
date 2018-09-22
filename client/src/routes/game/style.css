@@ -11,6 +11,7 @@
 	justify-content: space-between;
 	align-items: center;
 	padding-top: 40px;
+	max-height: 568px;
 }
 
 .loading {
@@ -29,10 +30,11 @@
 	font-size: 1.5rem;
 }
 
+
 .body {
 	display: flex;
-	justify-content: center;
 	align-items: center;
+	flex-direction: column;
 	width: 100%;
 	height: 100%;
 }
@@ -42,5 +44,21 @@
 	grid-template-columns: repeat(3, 90px);
 	grid-template-rows: repeat(4, 90px);
 	grid-gap: 10px;
-	margin: auto;
+	position: absolute;
+	bottom: 10px;
+}
+
+.countdown {
+	background-color: #ff3d3d;
+	color: white;
+	line-height: 2;
+	text-align: center;
+	max-width: 290px;
+	border-radius: 6px;
+	padding: 5px;
+	margin-top: 13px;
+}
+
+.canPlay {
+	margin-top: 13px;
 }

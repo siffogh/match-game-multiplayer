@@ -3,18 +3,19 @@
 import { Component } from "preact";
 import { route } from "preact-router";
 import io from "socket.io-client";
-import { fromEvent, merge } from "rxjs";
-
+import { fromEvent } from "rxjs";
 import Card from "../../components/card";
 import Feedback from "../../components/feedback";
 import { BASE_URL, post } from "../../request";
 
-import {
-  LOAD_STATUS,
-  DISCONNECT_ERROR,
-  DISCONNECT_REASON,
-} from "./constants";
 import style from "./style";
+
+const {
+  GAME_END_TYPE,
+  ERROR,
+  EVENT,
+  LOAD_STATUS
+} = require("../../../../__internal/constants");
 
 export default class Game extends Component {
   state = {
@@ -25,7 +26,10 @@ export default class Game extends Component {
     load: {
       status: LOAD_STATUS.LOADING,
       message: null
-    }
+    },
+    countdown: 20,
+    username: "",
+    canPlay: false
   };
 
   constructor(props) {
@@ -50,9 +54,7 @@ export default class Game extends Component {
             status: LOAD_STATUS.LOADED
           }
         },
-        () => {
-          this.initSocket();
-        }
+        this.initSocket
       );
     } catch (e) {
       const { message } = await e.json();
@@ -66,17 +68,53 @@ export default class Game extends Component {
   };
 
   initSocket = () => {
-    this.socket = io(BASE_URL, {
+    this.socket = io(`${BASE_URL}?username=${this.state.username}`, {
       path: `/${this.props.token}`
     });
-    const flippedObservable = fromEvent(this.socket, "flipped");
-    const matchedObservable = fromEvent(this.socket, "matched");
-    const mismatchedObservable = fromEvent(this.socket, "mismatched");
-    merge(flippedObservable, matchedObservable, mismatchedObservable).subscribe(
-      this.handleFlipped
+
+    fromEvent(this.socket, EVENT.CARD_FLIPPED).subscribe(this.handleCardFlip);
+
+    fromEvent(this.socket, EVENT.PLAYER_COUNTDOWN_UPDATED).subscribe(
+      this.handlePlayerCountdownUpdate
     );
-    fromEvent(this.socket, "disconnect").subscribe(this.handleDisconnect);
-    fromEvent(this.socket, "win").subscribe(this.handleWin);
+
+    fromEvent(this.socket, EVENT.PLAYER_COUNTDOWN_EXPIRED).subscribe(
+      this.handlePlayerCountdownExpiry
+    );
+
+    fromEvent(this.socket, EVENT.CURRENT_PLAYER_SWITCHED).subscribe(
+      this.handleCurrentPlayerSwitch
+    );
+
+    fromEvent(this.socket, EVENT.GAME_END).subscribe(this.handleGameEnd);
+
+    // fromEvent(this.socket, DISCONNECT).subscribe(this.handleDisconnect);
+  };
+
+  handleCardFlip = newStats => {
+    this.setState(newStats);
+  };
+
+  handlePlayerCountdownUpdate = countdown => {
+    this.setState({ countdown });
+  };
+
+  handlePlayerCountdownExpiry = () => {
+    this.socket.close();
+    this.setState({
+      load: {
+        status: LOAD_STATUS.TIMEOUT
+      }
+    });
+  };
+
+  handleCurrentPlayerSwitch = canPlay => {
+    this.setState({ canPlay });
+  };
+
+  handleGameEnd = message => {
+    this.setState({ load: { status: LOAD_STATUS.GAME_END, message } });
+    this.socket.close();
   };
 
   handleGameStart = token => {
@@ -84,38 +122,32 @@ export default class Game extends Component {
     this.loadGameData(token);
   };
 
-  handleDisconnect = reason => {
-    if (reason === DISCONNECT_REASON.WIN) {
-      return;
-    }
-
-    const message = DISCONNECT_ERROR;
+  handleDisconnect = () => {
     this.setState({
       load: {
         status: LOAD_STATUS.ERROR,
-        message
+        message: ERROR.DISCONNECT
       }
     });
-  };
-
-  handleFlipped = newStats => {
-    this.setState(newStats);
   };
 
   handleFlip = word => {
-    this.socket.emit("flip", word);
+    this.socket.emit(EVENT.CARD_FLIP, word);
   };
 
-  handleWin = () => {
-    this.socket.close();
-    this.setState({
-      load: {
-        status: LOAD_STATUS.WIN
-      }
-    });
-  };
-
-  render(_, { load, words, flippedIndices, matches }) {
+  render(
+    _,
+    {
+      username,
+      score,
+      load,
+      words,
+      flippedIndices,
+      matches,
+      countdown,
+      canPlay
+    }
+  ) {
     if (load.status === LOAD_STATUS.LOADING) {
       return <div class={style.loading}>Loading... </div>;
     }
@@ -129,27 +161,62 @@ export default class Game extends Component {
       );
     }
 
-    if (load.status === LOAD_STATUS.WIN) {
+    if ([LOAD_STATUS.GAME_END, LOAD_STATUS.TIMEOUT].includes(load.status)) {
+      let emoji, message;
+      if (load.status === LOAD_STATUS.TIMEOUT) {
+        emoji = "😕";
+        message = `You have been removed from the game. You can restart to join again
+        or create a new game.`;
+      } else {
+        switch (load.message) {
+          case GAME_END_TYPE.WON:
+            emoji = "🎉";
+            message = "Congratulations!";
+            break;
+          case GAME_END_TYPE.LOST:
+            emoji = "😕";
+            message = "You lost!";
+            break;
+          case GAME_END_TYPE.TIE:
+            emoji = "👍🏻";
+            message = "Well Played! It's a tie.";
+            break;
+          default:
+            emoji = "😕";
+            message = "This game has been closed due to inactivity.";
+        }
+      }
+
       return (
         <Feedback onGameStart={this.handleGameStart}>
-          <div class="emoji">🎉 </div> <div> Congratulations! </div>
-          <div> You won! </div>
+          <div class="emoji">{emoji}</div>
+          <div> {message}</div>
         </Feedback>
       );
     }
 
     return (
       <div class={style.game}>
-        <div class={style.header}>Score: {this.state.score} </div>
+        <div class={style.header}>
+          <div class={style.score} style={{ color: username.toLowerCase() }}>
+            Score: {score}
+          </div>
+        </div>
         <main class={style.body}>
-          <div class={style.grid}>
+          <div class={style.canPlay}>
+            {!canPlay ? "Wait for your turn" : "Your turn"}
+          </div>
+          {countdown > 10 ? null : (
+            <div class={style.countdown}>{countdown}</div>
+          )}
+          <div class={style.grid} data-canPlay={canPlay}>
             {words.map(word => (
               <Card
                 front={"?"}
                 back={word.value}
                 isFlipped={flippedIndices.includes(word.key)}
-                isDisabled={Boolean(matches[word.key])}
-                onClick={() => this.handleFlip(word)}
+                match={matches[word.key]}
+                onClick={!canPlay ? () => {} : () => this.handleFlip(word)}
               />
             ))}
           </div>

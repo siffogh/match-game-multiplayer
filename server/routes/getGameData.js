@@ -22,11 +22,14 @@ module.exports = function({ games }) {
       }
     }
 
+    // register the player
+    game.registerPlayer({ username: userCookie.username });
+
     // return response
     return h
       .response({
         words: game.words,
-        ...game.getStats(),
+        ...game.getPlayerStats(userCookie.username),
         username: userCookie.username
       })
       .state("user", userCookie);

@@ -9,12 +9,12 @@ function generateToken() {
   );
 }
 
-module.exports = function({ handleGameCreation }) {
+module.exports = function({ onGameCreated }) {
   function handler() {
     const token = generateToken();
 
     try {
-      handleGameCreation(token);
+      onGameCreated(token);
     } catch (e) {
       throw e;
     }
