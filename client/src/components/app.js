@@ -11,7 +11,7 @@ const {
   MESSAGE,
   EMOJI,
   LOAD_STATUS
-} = require("../../../__internal/constants");
+} = require("../../../server/__internal/constants");
 
 export default class App extends Component {
   state = {

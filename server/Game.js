@@ -1,8 +1,8 @@
-const { GAME_END_TYPE, EVENT } = require("../__internal/constants");
+const { GAME_END_TYPE, EVENT } = require("./__internal/constants");
 
 const usernameToColor = {
-  player1: "blue",
-  player2: "red"
+  player1: "#ff3d3d",
+  player2: "#005b96"
 };
 
 module.exports = class Game {

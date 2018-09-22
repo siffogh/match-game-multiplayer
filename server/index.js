@@ -7,7 +7,7 @@ const HapiSwagger = require("hapi-swagger");
 const Inert = require("inert");
 const Vision = require("vision");
 
-const { EVENT } = require("../__internal/constants");
+const { EVENT } = require("./__internal/constants");
 const words = require("./words");
 const createGameRoute = require("./routes/createGame");
 const getGameData = require("./routes/getGameData");

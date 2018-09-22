@@ -17,7 +17,7 @@ const {
   EVENT,
   LOAD_STATUS,
   MESSAGE
-} = require("../../../../__internal/constants");
+} = require("../../../../server/__internal/constants");
 
 export default class Game extends Component {
   state = {
@@ -142,19 +142,23 @@ export default class Game extends Component {
     this.route("/");
   };
 
-  canIPlay = () => {
-    const { canPlay } =
-      this.state.players.find(
-        player => player.username === this.state.username
-      ) || {};
+  getMyPlayer = () => {
+    return this.state.players.find(
+      player => player.username === this.state.username
+    );
+  };
 
-    return canPlay;
+  getCurrentPlayer = () => {
+    return this.state.players.find(player => player.canPlay);
   };
 
   render(_, { load, words, flippedIndices, matches, countdown, players }) {
     if (load.status === LOAD_STATUS.LOADING) {
       return <Loader />;
     }
+
+    const myPlayer = this.getMyPlayer();
+    const currentPlayer = this.getCurrentPlayer();
 
     return (
       <div class={style.game}>
@@ -170,19 +174,24 @@ export default class Game extends Component {
         </div>
         <main class={style.body}>
           <div class={style.canPlay}>
-            {!this.canIPlay() ? "Wait for your turn" : "Your turn"}
+            {!myPlayer.canPlay ? "Wait for your turn" : "Your turn"}
           </div>
           {countdown > 10 ? null : (
-            <div class={style.countdown}>{countdown}</div>
+            <div
+              class={style.countdown}
+              style={{ backgroundColor: currentPlayer.color }}
+            >
+              {countdown}
+            </div>
           )}
-          <div class={style.grid} data-canPlay={this.canIPlay()}>
+          <div class={style.grid} data-canPlay={myPlayer.canPlay}>
             {words.map(word => (
               <Card
                 front={"?"}
                 back={word.value}
                 isFlipped={flippedIndices.includes(word.key)}
                 match={matches[word.key]}
-                disabled={!this.canIPlay()}
+                disabled={!myPlayer.canPlay}
                 onClick={() => this.flipNext(word)}
               />
             ))}

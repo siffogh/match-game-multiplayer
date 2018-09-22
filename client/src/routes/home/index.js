@@ -18,7 +18,7 @@ export default function Home({ feedback, startGame }) {
   return (
     <div class={style.home}>
       {homeContent}
-      <Button onClick={this.props.startGame}>New Game</Button>
+      <Button onClick={startGame}>New Game</Button>
     </div>
   );
 }
