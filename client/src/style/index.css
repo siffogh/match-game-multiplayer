@@ -32,9 +32,3 @@ button, input {
 :global(.emoji) {
 	font-size: 6rem;
 }
-
-:global(.feedback-message) {
-	max-width: 300px;
-	padding-bottom: 30px;
-	font-size: 1.2rem;
-}

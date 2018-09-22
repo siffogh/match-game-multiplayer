@@ -12,7 +12,7 @@ module.exports = {
     PLAYERS_UPDATED: "PLAYERS_UPDATED"
   },
   MESSAGE: {
-    SERVER_ERROR: "Sorry, the game was closed due to a connection problem with the server.",
+    SERVER_ERROR: "Sorry, there seems to be a connection problem with the server.",
     WON: "You won!",
     LOST: "You lost!",
     TIE: "Well Played! It's a tie.",

@@ -5,16 +5,18 @@ import { route } from "preact-router";
 import io from "socket.io-client";
 import { fromEvent, Observable } from "rxjs";
 import { throttleTime } from "rxjs/operators";
-import Card from "../../components/card";
-import { BASE_URL, post } from "../../request";
 
+import { BASE_URL, post } from "../../request";
+import Card from "../../components/card";
+import Loader from "../../components/loader";
 import style from "./style";
 
 const {
   GAME_END_TYPE,
   ERROR,
   EVENT,
-  LOAD_STATUS
+  LOAD_STATUS,
+  MESSAGE
 } = require("../../../../__internal/constants");
 
 export default class Game extends Component {
@@ -60,13 +62,14 @@ export default class Game extends Component {
         this.initSocket
       );
     } catch (e) {
-      const { message } = await e.json();
-      this.setState({
-        load: {
-          status: LOAD_STATUS.ERROR,
-          message
-        }
-      });
+      let error;
+      if (typeof e.json !== "function") {
+        error = { message: MESSAGE.SERVER_ERROR };
+      } else {
+        error = await e.json();
+      }
+
+      this.props.onError(error.message);
     }
   };
 
@@ -150,10 +153,8 @@ export default class Game extends Component {
 
   render(_, { load, words, flippedIndices, matches, countdown, players }) {
     if (load.status === LOAD_STATUS.LOADING) {
-      return <div class={style.loading}>Loading... </div>;
+      return <Loader />;
     }
-
-    console.log(players);
 
     return (
       <div class={style.game}>

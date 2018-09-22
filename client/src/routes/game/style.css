@@ -10,20 +10,8 @@
 	flex-direction: column;
 	justify-content: space-between;
 	align-items: center;
-	padding-top: 40px;
+	padding-top: 15px;
 	max-height: 568px;
-}
-
-.loading {
-  position: absolute;
-  top: 0;
-  left: 0;
-	width: 100%;
-	height: 100%;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	text-align: center;
 }
 
 .header {
@@ -73,5 +61,5 @@
 }
 
 .canPlay {
-	margin-top: 13px;
+	margin-top: 30px;
 }
