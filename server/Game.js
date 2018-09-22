@@ -1,38 +1,60 @@
 const { GAME_END_TYPE, EVENT } = require("../__internal/constants");
 
+const usernameToColor = {
+  player1: "blue",
+  player2: "red"
+};
+
 module.exports = class Game {
-  constructor({ words, namespace, onGameEnd }) {
+  constructor({ words, namespace, deleteGame }) {
     // bind methods
     this.flip = this.flip.bind(this);
-    this.getPlayerStats = this.getPlayerStats.bind(this);
+    this.getPlayers = this.getPlayers.bind(this);
+    this.getGameStats = this.getGameStats.bind(this);
     this.handleCountdownChange = this.handleCountdownChange.bind(this);
     this.handleMatch = this.handleMatch.bind(this);
     this.handleMismatch = this.handleMismatch.bind(this);
+    this.endGame = this.endGame.bind(this);
+    this.registerPlayer = this.registerPlayer.bind(this);
+    this.addSocket = this.addSocket.bind(this);
 
     // initial data
     this.words = words;
     this.namespace = namespace;
-    this.onGameEnd = onGameEnd;
+    this.deleteGame = deleteGame;
     this.flippedIndices = [];
     this.matches = {};
     this.score = {};
     this.MAX_MATCHES = 12;
-    this.availableUsernames = ["blue", "red"];
+    this.availablePlayers = [
+      { username: "player1", color: usernameToColor.player1 },
+      { username: "player2", color: usernameToColor.player2 }
+    ];
     this.countdown = {
       value: 20,
       interval: setInterval(this.handleCountdownChange, 1000),
       reset: () => (this.countdown.value = 20)
     };
     this.players = {};
-    this.currentPlayer = null;
+    this.currentPlayerUsername = null;
   }
 
-  getPlayerStats(username) {
+  getPlayers() {
+    return Object.entries(this.players).map(([username, { score, color }]) => {
+      return {
+        username,
+        score,
+        canPlay: username === this.currentPlayerUsername,
+        color
+      };
+    });
+  }
+
+  getGameStats() {
     return {
       flippedIndices: this.flippedIndices,
       matches: this.matches,
-      score: this.players[username].score,
-      canPlay: this.currentPlayer === username
+      players: this.getPlayers()
     };
   }
 
@@ -47,27 +69,22 @@ module.exports = class Game {
     this.namespace.emit(EVENT.PLAYER_COUNTDOWN_UPDATED, this.countdown.value);
   }
 
-  generateUsername() {
-    if (this.availableUsernames.length === 0) {
+  generatePlayer() {
+    if (this.availablePlayers.length === 0) {
       throw new Error(
         "Sorry, the maximum number of players in this game has been reached."
       );
     }
 
-    // get random index
-    const idx = Math.floor(Math.random() * this.availableUsernames.length);
-
     // return username
-    return this.availableUsernames.splice(idx, 1)[0];
+    return this.availablePlayers.splice(0, 1)[0];
   }
 
-  registerPlayer({ username, socket }) {
+  registerPlayer({ username, color }) {
     const player = this.players[username] || {};
 
-    // update socket
-    if (socket) {
-      player.socket = socket;
-    }
+    // set color
+    player.color = color;
 
     const isFirstRegistrationForPlayer = typeof player.score === "undefined";
     const isFirstRegistrationInGame = Object.keys(this.players).length === 0;
@@ -77,108 +94,127 @@ module.exports = class Game {
     }
 
     if (isFirstRegistrationInGame) {
-      this.currentPlayer = username;
+      this.currentPlayerUsername = username;
     }
 
     // add player to players
     Object.assign(this.players, { [username]: player });
+    this.namespace.emit(EVENT.PLAYERS_UPDATED, this.getPlayers());
+  }
+
+  addSocket({ username, socket }) {
+    const player = this.players[username];
+
+    if (!player) {
+      return;
+    }
+
+    // update socket
+    player.socket = socket;
   }
 
   switchCurrentPlayer() {
     // if there is just one player registered, set the current username to that player
     if (Object.keys(this.players).length === 1) {
-      this.currentPlayer = Object.keys(this.players)[0];
+      this.currentPlayerUsername = Object.keys(this.players)[0];
     } else {
       // set current username to the other username
       const usernames = Object.keys(this.players);
-      this.currentPlayer =
-        this.currentPlayer === usernames[0] ? usernames[1] : usernames[0];
+      this.currentPlayerUsername =
+        this.currentPlayerUsername === usernames[0]
+          ? usernames[1]
+          : usernames[0];
     }
 
     // in 1000 seconds, update players whether they can play or not
     setTimeout(() => {
-      Object.entries(this.players).forEach(([username, player]) => {
-        const canPlay = this.currentPlayer === username;
-
-        player.socket.emit(EVENT.CURRENT_PLAYER_SWITCHED, canPlay);
-      });
+      this.namespace.emit(EVENT.PLAYERS_UPDATED, this.getPlayers());
     }, 1000);
   }
 
   removeCurrentPlayer() {
     // if this is the last player, close the game
     if (Object.keys(this.players).length === 1) {
-      this.namespace.emit(EVENT.GAME_END, GAME_END_TYPE.TIMEOUT);
-      this.endGame();
+      this.namespace.emit(EVENT.GAME_END, GAME_END_TYPE.GAME_TIMEOUT);
+      this.closeGame();
       return;
     }
 
-    // make the username available for future joins to the game
-    this.availableUsernames.push(this.currentPlayer);
+    // make the player available for future joins to the game
+    this.availablePlayers.push({
+      username: this.currentPlayerUsername,
+      color: usernameToColor[this.currentPlayerUsername]
+    });
 
     // emit contdown expired to the concerned player
-    this.players[this.currentPlayer].socket.emit(
+    this.players[this.currentPlayerUsername].socket.emit(
       EVENT.PLAYER_COUNTDOWN_EXPIRED
     );
 
     // delete the player
-    delete this.players[this.currentPlayer];
+    delete this.players[this.currentPlayerUsername];
 
     // switch player so that it becomes a single player game
     this.switchCurrentPlayer();
+
+    // emit players update
+    this.namespace.emit(EVENT.PLAYERS_UPDATED, this.getPlayers());
   }
 
   resetFlippedIndices(cb = () => {}) {
     this.flippedIndices = [];
     setTimeout(() => {
       Object.entries(this.players).forEach(([username, { socket }]) => {
-        socket.emit(EVENT.CARD_FLIPPED, this.getPlayerStats(username));
+        socket.emit(EVENT.CARD_FLIPPED, this.getGameStats());
       });
       cb();
     }, 500);
   }
 
+  endGame(username) {
+    if (Object.keys(this.players).length === 1) {
+      setTimeout(() => {
+        this.players[username].socket.emit(EVENT.GAME_END, GAME_END_TYPE.WON);
+        this.closeGame();
+      }, 1000);
+    } else if (this.players[username].score < 3) {
+      setTimeout(() => {
+        this.players[username].socket.emit(EVENT.GAME_END, GAME_END_TYPE.LOST);
+        this.players[username].socket.broadcast.emit(
+          EVENT.GAME_END,
+          GAME_END_TYPE.WON
+        );
+        this.closeGame();
+      }, 1000);
+    } else if (this.players[username].score > 3) {
+      setTimeout(() => {
+        this.players[username].socket.emit(EVENT.GAME_END, GAME_END_TYPE.WON);
+        this.players[username].socket.broadcast.emit(
+          EVENT.GAME_END,
+          GAME_END_TYPE.LOST
+        );
+        this.closeGame();
+      }, 1000);
+    } else {
+      setTimeout(() => {
+        this.namespace.emit(EVENT.GAME_END, GAME_END_TYPE.TIE);
+        this.closeGame();
+      }, 1000);
+    }
+  }
+
   handleMatch(username) {
     // push matches
-    this.flippedIndices.forEach(idx => (this.matches[idx] = { username }));
+    this.flippedIndices.forEach(
+      idx => (this.matches[idx] = { color: this.players[username].color })
+    );
 
     // incement the score of the player
     this.players[username].score++;
 
     // check whether the current player won
     if (Object.keys(this.matches).length === this.MAX_MATCHES) {
-      if (Object.keys(this.players).length === 1) {
-        setTimeout(() => {
-          this.players[username].socket.emit(EVENT.GAME_END, GAME_END_TYPE.WON);
-          this.endGame();
-        }, 1000);
-      } else if (this.players[username].score < 3) {
-        setTimeout(() => {
-          this.players[username].socket.emit(
-            EVENT.GAME_END,
-            GAME_END_TYPE.LOST
-          );
-          this.players[username].socket.broadcast.emit(
-            EVENT.GAME_END,
-            GAME_END_TYPE.WON
-          );
-          this.endGame();
-        }, 1000);
-      } else if (this.players[username].score > 3) {
-        setTimeout(() => {
-          this.players[username].socket.emit(EVENT.GAME_END, GAME_END_TYPE.WON);
-          this.players[username].socket.broadcast.emit(
-            EVENT.GAME_END,
-            GAME_END_TYPE.LOST
-          );
-          this.endGame();
-        }, 1000);
-      } else {
-        setTimeout(() => {
-          this.namespace.emit(EVENT.GAME_END, GAME_END_TYPE.TIE);
-          this.endGame();
-        }, 1000);
-      }
+      this.endGame(username);
     }
 
     this.resetFlippedIndices();
@@ -194,7 +230,7 @@ module.exports = class Game {
 
     this.flippedIndices.push(word.key);
 
-    this.namespace.emit(EVENT.CARD_FLIPPED, this.getPlayerStats(username));
+    this.namespace.emit(EVENT.CARD_FLIPPED, this.getGameStats());
 
     if (this.flippedIndices.length === 1) {
       return;
@@ -204,8 +240,9 @@ module.exports = class Game {
       ? this.handleMatch(username)
       : this.handleMismatch();
   }
-  endGame() {
+
+  closeGame() {
     clearInterval(this.countdown.interval);
-    return this.onGameEnd();
+    return this.deleteGame();
   }
 };

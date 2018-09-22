@@ -12,9 +12,11 @@ module.exports = function({ games }) {
     // handle userCookie
     let userCookie = request.state.user;
     if (!userCookie || (userCookie && userCookie.token !== token)) {
+      const { username, color } = game.generatePlayer();
       try {
         userCookie = {
-          username: game.generateUsername(),
+          username,
+          color,
           token: token
         };
       } catch (e) {
@@ -23,13 +25,16 @@ module.exports = function({ games }) {
     }
 
     // register the player
-    game.registerPlayer({ username: userCookie.username });
+    game.registerPlayer({
+      username: userCookie.username,
+      color: userCookie.color
+    });
 
     // return response
     return h
       .response({
         words: game.words,
-        ...game.getPlayerStats(userCookie.username),
+        ...game.getGameStats(),
         username: userCookie.username
       })
       .state("user", userCookie);

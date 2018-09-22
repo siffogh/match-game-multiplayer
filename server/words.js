@@ -1,61 +1,61 @@
-module.exports =  [
+module.exports = [
   {
-    value: 'jung',
+    value: "jung",
     key: 0,
     match: 1
   },
   {
-    value: 'young',
+    value: "young",
     key: 1,
     match: 0
   },
   {
-    value: 'möglich',
+    value: "erste",
     key: 2,
     match: 3
   },
   {
-    value: 'possible',
+    value: "first",
     key: 3,
     match: 2
   },
   {
-    value: 'nichts',
+    value: "nichts",
     key: 4,
     match: 5
   },
   {
-    value: 'nothing',
+    value: "nothing",
     key: 5,
     match: 4
   },
   {
-    value: 'stuhl',
+    value: "Stuhl",
     key: 6,
     match: 7
   },
   {
-    value: 'chair',
+    value: "chair",
     key: 7,
     match: 6
   },
   {
-    value: 'hell',
+    value: "hell",
     key: 8,
     match: 9
   },
   {
-    value: 'bright',
+    value: "bright",
     key: 9,
     match: 8
   },
   {
-    value: 'kurs',
+    value: "Kurs",
     key: 10,
     match: 11
   },
   {
-    value: 'course',
+    value: "course",
     key: 11,
     match: 10
   }

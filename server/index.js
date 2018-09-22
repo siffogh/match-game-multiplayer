@@ -43,7 +43,7 @@ function handleGameCreation(token) {
     throw Boom.badRequest("Games limit reached.");
   }
 
-  function handleGameEnd() {
+  function deleteGame() {
     delete games[token];
   }
 
@@ -55,7 +55,7 @@ function handleGameCreation(token) {
   const game = new Game({
     words: shuffleArray(words),
     namespace,
-    onGameEnd: handleGameEnd
+    deleteGame: deleteGame
   });
 
   games[token] = game;
@@ -63,7 +63,7 @@ function handleGameCreation(token) {
   namespace.on(EVENT.CONNECTION, socket => {
     // register player
     const username = socket.handshake.query.username;
-    game.registerPlayer({ socket, username });
+    game.addSocket({ socket, username });
 
     // add flip event listener
     socket.on(EVENT.CARD_FLIP, word => game.flip({ word, username }));
