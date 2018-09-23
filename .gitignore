@@ -1,7 +1,7 @@
-client/node_modules
-server/node_modules
-/client/build
+.vscode/
+src/node_modules
+src/build
+src/client/node_modules
 /*.log
 *.lock
-
-package-lock.json
+*-lock.json
