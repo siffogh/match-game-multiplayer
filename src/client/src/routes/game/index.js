@@ -6,7 +6,7 @@ import io from "socket.io-client";
 import { fromEvent, Observable } from "rxjs";
 import { throttleTime } from "rxjs/operators";
 
-import { BASE_URL, post } from "../../request";
+import { post } from "../../request";
 import Card from "../../components/card";
 import Loader from "../../components/loader";
 import style from "./style";
@@ -88,13 +88,7 @@ export default class Game extends Component {
       this.handlePlayersUpdate
     );
 
-    fromEvent(this.socket, EVENT.PLAYER_COUNTDOWN_EXPIRED).subscribe(
-      this.handlePlayerCountdownExpiry
-    );
-
     fromEvent(this.socket, EVENT.GAME_END).subscribe(this.handleGameEnd);
-
-    // fromEvent(this.socket, DISCONNECT).subscribe(this.handleDisconnect);
   };
 
   handleCardFlip = newStats => {
@@ -107,11 +101,6 @@ export default class Game extends Component {
 
   handlePlayersUpdate = players => {
     this.setState({ players });
-  };
-
-  handlePlayerCountdownExpiry = () => {
-    this.socket.close();
-    this.props.removeGame(GAME_END_TYPE.PLAYER_TIMEOUT);
   };
 
   handleGameEnd = message => {
