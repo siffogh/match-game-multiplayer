@@ -11,6 +11,9 @@
     "lint": "eslint src",
     "test": "jest ./tests"
   },
+  "prettier": {
+    "singleQuote": true
+  },
   "eslintConfig": {
     "extends": "eslint-config-synacor"
   },

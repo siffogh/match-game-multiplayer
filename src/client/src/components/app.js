@@ -1,17 +1,17 @@
-import { Component } from "preact";
-import Router from "preact-router";
+import { Component } from 'preact';
+import Router from 'preact-router';
 
-import { get } from "../request";
-import Home from "../routes/home";
-import Game from "../routes/game";
-import Loader from "./loader";
+import { get } from '../request';
+import Home from '../routes/home';
+import Game from '../routes/game';
+import Loader from './loader';
 
 const {
   GAME_END_TYPE,
   MESSAGE,
   EMOJI,
   LOAD_STATUS
-} = require("../../../__internal/constants");
+} = require('../../../__internal/constants');
 
 export default class App extends Component {
   state = {
@@ -36,7 +36,7 @@ export default class App extends Component {
       { load: { status: LOAD_STATUS.LOADING, message: null } },
       async () => {
         try {
-          const res = await get("create-game");
+          const res = await get('create-game');
           const { token } = await res.json();
           this.setState({
             load: { status: LOAD_STATUS.LOADED, message: null },
@@ -44,7 +44,7 @@ export default class App extends Component {
           });
         } catch (e) {
           let error;
-          if (typeof e.json !== "function") {
+          if (typeof e.json !== 'function') {
             error = { message: MESSAGE.SERVER_ERROR };
           } else {
             error = await e.json();
@@ -64,14 +64,14 @@ export default class App extends Component {
         load: { status: LOAD_STATUS.ERROR, message: error, token: null }
       },
       () => {
-        Router.route("/");
+        Router.route('/');
       }
     );
   };
 
   removeGame = gameEnd => {
     this.setState({ gameEnd, token: null }, () => {
-      Router.route("/");
+      Router.route('/');
     });
   };
 

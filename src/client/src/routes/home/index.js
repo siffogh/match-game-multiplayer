@@ -1,5 +1,5 @@
-import Button from "../../components/button";
-import style from "./style.css";
+import Button from '../../components/button';
+import style from './style.css';
 
 export default function Home({ feedback, startGame }) {
   // get the right content based on load status

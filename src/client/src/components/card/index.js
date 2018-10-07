@@ -1,4 +1,4 @@
-import style from "./style.css";
+import style from './style.css';
 
 export default function Card({
   front,

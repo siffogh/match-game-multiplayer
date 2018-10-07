@@ -1,23 +1,20 @@
-/* eslint react/sort-comp: 0 */
+import { Component } from 'preact';
+import { route } from 'preact-router';
+import io from 'socket.io-client';
+import { fromEvent, Observable } from 'rxjs';
+import { throttleTime } from 'rxjs/operators';
 
-import { Component } from "preact";
-import { route } from "preact-router";
-import io from "socket.io-client";
-import { fromEvent, Observable } from "rxjs";
-import { throttleTime } from "rxjs/operators";
-
-import { post } from "../../request";
-import Card from "../../components/card";
-import Loader from "../../components/loader";
-import style from "./style";
+import { post } from '../../request';
+import Card from '../../components/card';
+import Loader from '../../components/loader';
+import style from './style';
 
 const {
-  GAME_END_TYPE,
   ERROR,
   EVENT,
   LOAD_STATUS,
   MESSAGE
-} = require("../../../../__internal/constants");
+} = require('../../../../__internal/constants');
 
 export default class Game extends Component {
   state = {
@@ -48,7 +45,7 @@ export default class Game extends Component {
 
   loadGameData = async token => {
     try {
-      const res = await post("game-data", {
+      const res = await post('game-data', {
         token
       });
       const stats = await res.json();
@@ -63,7 +60,7 @@ export default class Game extends Component {
       );
     } catch (e) {
       let error;
-      if (typeof e.json !== "function") {
+      if (typeof e.json !== 'function') {
         error = { message: MESSAGE.SERVER_ERROR };
       } else {
         error = await e.json();
@@ -128,7 +125,7 @@ export default class Game extends Component {
 
   leaveGame = () => {
     this.socket.close();
-    this.route("/");
+    this.route('/');
   };
 
   getMyPlayer = () => {
@@ -163,7 +160,7 @@ export default class Game extends Component {
         </div>
         <main class={style.body}>
           <div class={style.canPlay}>
-            {!myPlayer.canPlay ? "Wait for your turn" : "Your turn"}
+            {!myPlayer.canPlay ? 'Wait for your turn' : 'Your turn'}
           </div>
           {countdown > 10 ? null : (
             <div
@@ -176,7 +173,7 @@ export default class Game extends Component {
           <div class={style.grid} data-canPlay={myPlayer.canPlay}>
             {words.map(word => (
               <Card
-                front={"?"}
+                front={'?'}
                 back={word.value}
                 isFlipped={flippedIndices.includes(word.key)}
                 match={matches[word.key]}
