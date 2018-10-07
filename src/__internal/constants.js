@@ -5,6 +5,11 @@ module.exports = {
     GAME_UPDATE: "GAME_UPDATE",
     GAME_END: "GAME_END"
   },
+  FLIP_STATUS: {
+    DEFAULT: "DEFAULT",
+    FLIPPED: "FLIPPED",
+    MATCHED: "MATCHED"
+  },
   MESSAGE: {
     SERVER_ERROR:
       "Sorry, there seems to be a connection problem with the server.",

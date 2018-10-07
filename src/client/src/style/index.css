@@ -28,7 +28,3 @@ button, input {
 #app {
 	height: 100%;
 }
-
-:global(.emoji) {
-	font-size: 6rem;
-}

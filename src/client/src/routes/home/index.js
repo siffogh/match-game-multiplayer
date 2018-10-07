@@ -4,6 +4,9 @@ import Button from '../../components/button';
 import style from './style.css';
 
 export default class Home extends Component {
+  /**
+   * renders the default welcome content
+   */
   renderWelcomeContent = () => {
     return (
       <div class={style.head}>
@@ -13,10 +16,13 @@ export default class Home extends Component {
     );
   };
 
+  /**
+   * renders the content for a given feedback message
+   */
   renderFeedbackContent = ({ message, emoji }) => {
     return (
       <div class={style.head}>
-        <div class="emoji">{emoji} </div>
+        <div class={style.emoji}>{emoji} </div>
         <div> {message} </div>
       </div>
     );

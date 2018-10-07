@@ -11,6 +11,7 @@ import style from './style';
 const {
   EVENT,
   LOAD_STATUS,
+  FLIP_STATUS,
   MESSAGE
 } = require('../../../../__internal/constants');
 
@@ -100,6 +101,16 @@ export default class Game extends Component {
     return this.state.players.find(player => player.canPlay);
   };
 
+  getFlipStatus = key => {
+    if (!this.state.flippedIndices.includes(key)) {
+      return FLIP_STATUS.DEFAULT;
+    } else {
+      return this.state.matches[key]
+        ? FLIP_STATUS.MATCHED
+        : FLIP_STATUS.FLIPPED;
+    }
+  };
+
   render(_, { load, words, flippedIndices, matches, countdown, players }) {
     if (load.status === LOAD_STATUS.LOADING) {
       return <Loader />;
@@ -135,10 +146,8 @@ export default class Game extends Component {
           <div class={style.grid} data-canPlay={myPlayer.canPlay}>
             {words.map(word => (
               <Card
-                front={'?'}
-                back={word.value}
-                isFlipped={flippedIndices.includes(word.key)}
-                match={matches[word.key]}
+                hiddenValue={word.value}
+                flipStatus={this.getFlipStatus(word.key)}
                 disabled={!myPlayer.canPlay}
                 onClick={() => this.flipNext(word)}
               />
