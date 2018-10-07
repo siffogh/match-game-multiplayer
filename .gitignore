@@ -1,5 +1,5 @@
 .vscode/
-src/node_modules
+node_modules
 src/build
 src/client/node_modules
 /*.log

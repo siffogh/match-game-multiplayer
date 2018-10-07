@@ -4,13 +4,13 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "client:build": "cd client && npm run build",
-    "server:build": "NODE_ENV=prod node server.js",
-    "postinstall": "cd client && npm i",
-    "server:dev": "node server.js",
-    "client:dev": "cd client && npm run start",
+    "build": "run-s *:build",
+    "client:build": "cd src/client && npm run build",
+    "client:dev": "cd src/client && npm run start",
     "dev": "run-p *:dev ",
-    "build": "run-s *:build"
+    "server:build": "NODE_ENV=prod node src/server.js",
+    "server:dev": "node src/server.js",
+    "postinstall": "cd src/client && npm i"
   },
   "author": "",
   "license": "ISC",
