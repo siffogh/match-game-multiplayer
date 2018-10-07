@@ -143,7 +143,8 @@ module.exports = class Game {
 
     // emit contdown expired to the concerned player
     this.players[this.currentPlayerUsername].socket.emit(
-      EVENT.PLAYER_COUNTDOWN_EXPIRED
+      EVENT.GAME_END,
+      GAME_END_TYPE.PLAYER_TIMEOUT
     );
 
     // delete the player
