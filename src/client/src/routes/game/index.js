@@ -1,5 +1,4 @@
 import { Component } from 'preact';
-import { route } from 'preact-router';
 import io from 'socket.io-client';
 import { fromEvent, Observable } from 'rxjs';
 import { throttleTime } from 'rxjs/operators';
@@ -10,7 +9,6 @@ import Loader from '../../components/loader';
 import style from './style';
 
 const {
-  ERROR,
   EVENT,
   LOAD_STATUS,
   MESSAGE
@@ -75,29 +73,12 @@ export default class Game extends Component {
       path: `/socket.io/${this.props.token}`
     });
 
-    fromEvent(this.socket, EVENT.CARD_FLIPPED).subscribe(this.handleCardFlip);
-
-    fromEvent(this.socket, EVENT.PLAYER_COUNTDOWN_UPDATED).subscribe(
-      this.handlePlayerCountdownUpdate
-    );
-
-    fromEvent(this.socket, EVENT.PLAYERS_UPDATED).subscribe(
-      this.handlePlayersUpdate
-    );
-
+    fromEvent(this.socket, EVENT.GAME_UPDATE).subscribe(this.handleGameUpdate);
     fromEvent(this.socket, EVENT.GAME_END).subscribe(this.handleGameEnd);
   };
 
-  handleCardFlip = newStats => {
+  handleGameUpdate = newStats => {
     this.setState(newStats);
-  };
-
-  handlePlayerCountdownUpdate = countdown => {
-    this.setState({ countdown });
-  };
-
-  handlePlayersUpdate = players => {
-    this.setState({ players });
   };
 
   handleGameEnd = message => {
@@ -105,27 +86,8 @@ export default class Game extends Component {
     this.props.removeGame(message);
   };
 
-  handleGameStart = token => {
-    route(`/game/${token}`);
-    this.loadGameData(token);
-  };
-
-  handleDisconnect = () => {
-    this.setState({
-      load: {
-        status: LOAD_STATUS.ERROR,
-        message: ERROR.DISCONNECT
-      }
-    });
-  };
-
   flipCard = word => {
     this.socket.emit(EVENT.CARD_FLIP, word);
-  };
-
-  leaveGame = () => {
-    this.socket.close();
-    this.route('/');
   };
 
   getMyPlayer = () => {

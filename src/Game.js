@@ -63,10 +63,12 @@ module.exports = class Game {
 
     if (this.countdown.value === 0) {
       this.countdown.reset();
-      return this.removeCurrentPlayer();
+      this.removeCurrentPlayer();
     }
 
-    this.namespace.emit(EVENT.PLAYER_COUNTDOWN_UPDATED, this.countdown.value);
+    this.namespace.emit(EVENT.GAME_UPDATE, {
+      countdown: this.countdown.value
+    });
   }
 
   generatePlayer() {
@@ -99,7 +101,7 @@ module.exports = class Game {
 
     // add player to players
     Object.assign(this.players, { [username]: player });
-    this.namespace.emit(EVENT.PLAYERS_UPDATED, this.getPlayers());
+    this.namespace.emit(EVENT.GAME_UPDATE, { players: this.getPlayers() });
   }
 
   addSocket({ username, socket }) {
@@ -154,13 +156,13 @@ module.exports = class Game {
     this.switchCurrentPlayer();
 
     // emit players update
-    this.namespace.emit(EVENT.PLAYERS_UPDATED, this.getPlayers());
+    this.namespace.emit(EVENT.GAME_UPDATE, { players: this.getPlayers() });
   }
 
   resetFlippedIndices() {
     this.flippedIndices = [];
     setTimeout(() => {
-      this.namespace.emit(EVENT.CARD_FLIPPED, this.getGameStats());
+      this.namespace.emit(EVENT.GAME_UPDATE, this.getGameStats());
     }, 500);
   }
 
@@ -224,7 +226,7 @@ module.exports = class Game {
 
     this.flippedIndices.push(word.key);
 
-    this.namespace.emit(EVENT.CARD_FLIPPED, this.getGameStats());
+    this.namespace.emit(EVENT.GAME_UPDATE, this.getGameStats());
 
     if (this.flippedIndices.length === 1) {
       return;
